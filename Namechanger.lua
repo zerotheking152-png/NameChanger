@@ -1,216 +1,258 @@
--- =============================================
--- FISH IT! NAME + LEVEL CHANGER GUI (ON/OFF)
--- Copy paste FULL ke executor lu (Fluxus/Solara/Wave/etc)
--- =============================================
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local player = game.Players.LocalPlayer
-local customName = "BUAT"          -- default nama
-local customLevel = "999"          -- default level
-local enabled = false
+local Window = Rayfield:CreateWindow({
+    Name = "🔥 Nama & Level Changer PRO",
+    LoadingTitle = "Rayfield",
+    LoadingSubtitle = "Upgrade by Grok - FULL CUSTOM + AUTO DETECT",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "NameLevelChangerPRO",
+        FileName = "Config"
+    },
+    Discord = { Enabled = false },
+    KeySystem = false,
+})
 
--- ================== BUAT GUI ==================
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "FishItNameChanger"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+local Tab = Window:CreateTab("Main Changer", 0)
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 320, 0, 220)
-mainFrame.Position = UDim2.new(0.5, -160, 0.5, -110)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BorderSizePixel = 0
-mainFrame.Active = true
-mainFrame.Draggable = true
-mainFrame.Parent = screenGui
+-- ==================== SETTINGS ====================
+local currentName = game.Players.LocalPlayer.DisplayName
+local nameColor = Color3.fromRGB(255, 255, 255)
+local nameSize = 1.5
+local useStroke = true
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = mainFrame
+local selectedStat = nil
+local currentLevelValue = 0
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundTransparency = 1
-title.Text = "🐟 FISH IT NAME CHANGER"
-title.TextColor3 = Color3.fromRGB(0, 255, 100)
-title.TextScaled = true
-title.Font = Enum.Font.GothamBold
-title.Parent = mainFrame
+-- ==================== NAMETAG FUNCTION (UPGRADED) ====================
+local function applyFakeName(newName, color, sizeMult, stroke)
+    if newName == "" then return end
+    
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    if not char then return end
+    
+    local head = char:WaitForChild("Head", 5)
+    if not head then return end
+    
+    -- Hapus nametag lama kalau ada
+    local oldTag = head:FindFirstChild("FakeNameTagPRO")
+    if oldTag then oldTag:Destroy() end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "FakeNameTagPRO"
+    billboard.Adornee = head
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(6, 0, 2, 0)
+    billboard.StudsOffset = Vector3.new(0, 4, 0)
+    billboard.Parent = head
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = newName
+    textLabel.TextColor3 = color
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextStrokeTransparency = stroke and 0 or 1
+    textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    textLabel.Parent = billboard
+    
+    -- Scale ukuran sesuai request
+    textLabel.Size = UDim2.new(1, 0, sizeMult, 0)
+    
+    Rayfield:Notify({
+        Title = "✅ Nama Berhasil Diubah",
+        Content = "Fake nametag sekarang: " .. newName,
+        Duration = 5
+    })
+end
 
--- Nama
-local nameLabel = Instance.new("TextLabel")
-nameLabel.Size = UDim2.new(0, 100, 0, 30)
-nameLabel.Position = UDim2.new(0, 20, 0, 55)
-nameLabel.BackgroundTransparency = 1
-nameLabel.Text = "Nama:"
-nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-nameLabel.Font = Enum.Font.Gotham
-nameLabel.TextScaled = true
-nameLabel.Parent = mainFrame
-
-local nameBox = Instance.new("TextBox")
-nameBox.Size = UDim2.new(0, 180, 0, 30)
-nameBox.Position = UDim2.new(0, 120, 0, 55)
-nameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-nameBox.Text = customName
-nameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-nameBox.PlaceholderText = "Masukin nama lu"
-nameBox.ClearTextOnFocus = false
-nameBox.Font = Enum.Font.Gotham
-nameBox.TextScaled = true
-nameBox.Parent = mainFrame
-
-local nameCorner = Instance.new("UICorner")
-nameCorner.CornerRadius = UDim.new(0, 8)
-nameCorner.Parent = nameBox
-
--- Level
-local levelLabel = Instance.new("TextLabel")
-levelLabel.Size = UDim2.new(0, 100, 0, 30)
-levelLabel.Position = UDim2.new(0, 20, 0, 95)
-levelLabel.BackgroundTransparency = 1
-levelLabel.Text = "Level:"
-levelLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-levelLabel.TextXAlignment = Enum.TextXAlignment.Left
-levelLabel.Font = Enum.Font.Gotham
-levelLabel.TextScaled = true
-levelLabel.Parent = mainFrame
-
-local levelBox = Instance.new("TextBox")
-levelBox.Size = UDim2.new(0, 180, 0, 30)
-levelBox.Position = UDim2.new(0, 120, 0, 95)
-levelBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-levelBox.Text = customLevel
-levelBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-levelBox.PlaceholderText = "Masukin level"
-levelBox.ClearTextOnFocus = false
-levelBox.Font = Enum.Font.Gotham
-levelBox.TextScaled = true
-levelBox.Parent = mainFrame
-
-local levelCorner = Instance.new("UICorner")
-levelCorner.CornerRadius = UDim.new(0, 8)
-levelCorner.Parent = levelBox
-
--- Toggle Button
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Size = UDim2.new(0, 280, 0, 40)
-toggleBtn.Position = UDim2.new(0, 20, 0, 140)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-toggleBtn.Text = "OFF - Klik buat nyalain"
-toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleBtn.TextScaled = true
-toggleBtn.Font = Enum.Font.GothamBold
-toggleBtn.Parent = mainFrame
-
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(0, 10)
-toggleCorner.Parent = toggleBtn
-
--- Status label
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, 0, 0, 20)
-statusLabel.Position = UDim2.new(0, 0, 1, -25)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "Status: DISABLED"
-statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-statusLabel.TextScaled = true
-statusLabel.Font = Enum.Font.Gotham
-statusLabel.Parent = mainFrame
-
--- Close button
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -35, 0, 5)
-closeBtn.BackgroundTransparency = 1
-closeBtn.Text = "✕"
-closeBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-closeBtn.TextScaled = true
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.Parent = mainFrame
-
--- ================== LOGIC ==================
-local function updateNameTag(char)
-    if not enabled or not char then return end
+-- Update existing nametag (live preview)
+local function updateExistingNametag(newName, color, sizeMult, stroke)
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    if not char then return end
     local head = char:FindFirstChild("Head")
     if not head then return end
+    
+    local tag = head:FindFirstChild("FakeNameTagPRO")
+    if tag then
+        local textLabel = tag:FindFirstChildOfClass("TextLabel")
+        if textLabel then
+            textLabel.Text = newName
+            textLabel.TextColor3 = color
+            textLabel.TextStrokeTransparency = stroke and 0 or 1
+            textLabel.Size = UDim2.new(1, 0, sizeMult, 0)
+        end
+    else
+        -- Kalau belum ada, buat baru
+        applyFakeName(newName, color, sizeMult, stroke)
+    end
+end
 
-    for _, gui in pairs(head:GetChildren()) do
-        if gui:IsA("BillboardGui") or gui.Name:lower():find("name") or gui.Name:lower():find("tag") or gui.Name:lower():find("level") then
-            for _, label in pairs(gui:GetDescendants()) do
-                if label:IsA("TextLabel") then
-                    if label.Text:find(player.Name) or label.Text:find("Level") or label.Text:find("%d+") then
-                        label.Text = customName .. "\nLevel " .. customLevel
-                    end
-                end
-            end
+-- Auto apply saat respawn
+local function setupRespawnHandler()
+    local player = game.Players.LocalPlayer
+    player.CharacterAdded:Connect(function(char)
+        wait(1) -- tunggu Head load
+        if currentName \~= "" then
+            applyFakeName(currentName, nameColor, nameSize, useStroke)
+        end
+    end)
+end
+
+-- ==================== LEVEL FUNCTION (AUTO DETECT) ====================
+local function getAllLevelStats()
+    local player = game.Players.LocalPlayer
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if not leaderstats then return {} end
+    
+    local stats = {}
+    for _, stat in ipairs(leaderstats:GetChildren()) do
+        if stat:IsA("IntValue") or stat:IsA("NumberValue") then
+            table.insert(stats, stat.Name)
         end
     end
+    return stats
 end
 
-local function applyChanges()
-    if player.Character then
-        updateNameTag(player.Character)
+local function applyLevel(statName, newValue)
+    local player = game.Players.LocalPlayer
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if not leaderstats then
+        Rayfield:Notify({Title = "❌ Error", Content = "Leaderstats tidak ditemukan!", Duration = 6})
+        return
     end
-end
-
--- Update real-time tiap heartbeat
-game:GetService("RunService").Heartbeat:Connect(function()
-    if enabled and player.Character and player.Character:FindFirstChild("Head") then
-        updateNameTag(player.Character)
-    end
-end)
-
--- Character spawn
-player.CharacterAdded:Connect(function(char)
-    task.wait(1)
-    if enabled then
-        updateNameTag(char)
-    end
-end)
-
--- Toggle logic
-local function toggleFunction()
-    enabled = not enabled
-    if enabled then
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
-        toggleBtn.Text = "ON - Klik buat matiin"
-        statusLabel.Text = "Status: ENABLED ✅"
-        statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
-        applyChanges()
+    
+    local stat = leaderstats:FindFirstChild(statName)
+    if stat and (stat:IsA("IntValue") or stat:IsA("NumberValue")) then
+        stat.Value = newValue
+        Rayfield:Notify({
+            Title = "✅ Level Diubah",
+            Content = statName .. " sekarang: " .. newValue .. " (client-side)",
+            Duration = 5
+        })
     else
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        toggleBtn.Text = "OFF - Klik buat nyalain"
-        statusLabel.Text = "Status: DISABLED ❌"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+        Rayfield:Notify({Title = "❌ Error", Content = "Stat " .. statName .. " tidak ditemukan!", Duration = 5})
     end
 end
 
-toggleBtn.MouseButton1Click:Connect(toggleFunction)
+-- ==================== GUI UPGRADED ====================
+Tab:CreateSection("🌟 NAMA CHANGER (Full Custom)")
 
--- Update custom value langsung dari textbox
-nameBox.FocusLost:Connect(function(enterPressed)
-    customName = nameBox.Text \~= "" and nameBox.Text or "BUAT"
-    if enabled then applyChanges() end
-end)
+Tab:CreateInput({
+    Name = "Nama Baru",
+    PlaceholderText = "Ketik nama yang lu mau (bisa emoji dll)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Text)
+        currentName = Text
+    end,
+})
 
-levelBox.FocusLost:Connect(function(enterPressed)
-    customLevel = levelBox.Text \~= "" and levelBox.Text or "999"
-    if enabled then applyChanges() end
-end)
+Tab:CreateColorPicker({
+    Name = "Warna Nama",
+    Color = Color3.fromRGB(255, 255, 255),
+    Callback = function(Value)
+        nameColor = Value
+        -- Live update kalau nametag udah ada
+        updateExistingNametag(currentName, nameColor, nameSize, useStroke)
+    end,
+})
 
--- Close GUI
-closeBtn.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-    print("GUI ditutup. Inject lagi kalau mau dipake.")
-end)
+Tab:CreateSlider({
+    Name = "Ukuran Teks",
+    Range = {0.5, 5},
+    Increment = 0.1,
+    CurrentValue = 1.5,
+    Callback = function(Value)
+        nameSize = Value
+        updateExistingNametag(currentName, nameColor, nameSize, useStroke)
+    end,
+})
 
--- Kalau character udah ada pas inject
-if player.Character then
-    task.wait(1)
-    if enabled then
-        updateNameTag(player.Character)
-    end
-end
+Tab:CreateToggle({
+    Name = "Text Stroke (Outline Hitam)",
+    CurrentValue = true,
+    Callback = function(Value)
+        useStroke = Value
+        updateExistingNametag(currentName, nameColor, nameSize, useStroke)
+    end,
+})
 
-print("✅ FISH IT GUI LOADED! Buka GUI di layar lu, custom nama & level, klik ON/OFF sesuka hati bro!")
+Tab:CreateButton({
+    Name = "🚀 Apply Nama Sekarang",
+    Callback = function()
+        if currentName \~= "" then
+            applyFakeName(currentName, nameColor, nameSize, useStroke)
+        end
+    end,
+})
+
+Tab:CreateSection("📊 LEVEL CHANGER (Auto Detect Semua Stat)")
+
+local statDropdown = Tab:CreateDropdown({
+    Name = "Pilih Stat Level",
+    Options = {},
+    CurrentOption = {},
+    Callback = function(Option)
+        selectedStat = Option[1]
+    end,
+})
+
+Tab:CreateButton({
+    Name = "🔄 Refresh Daftar Stat Level",
+    Callback = function()
+        local stats = getAllLevelStats()
+        if #stats == 0 then
+            Rayfield:Notify({Title = "❌", Content = "Leaderstats belum muncul atau kosong!", Duration = 5})
+            return
+        end
+        statDropdown:Refresh(stats, true) -- true = reset ke pilihan pertama
+        Rayfield:Notify({Title = "✅", Content = #stats .. " stat ditemukan!", Duration = 4})
+    end,
+})
+
+Tab:CreateInput({
+    Name = "Nilai Level Baru",
+    PlaceholderText = "Contoh: 999999",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Text)
+        currentLevelValue = tonumber(Text) or 0
+    end,
+})
+
+Tab:CreateButton({
+    Name = "🚀 Apply Level",
+    Callback = function()
+        if selectedStat and currentLevelValue \~= 0 then
+            applyLevel(selectedStat, currentLevelValue)
+        else
+            Rayfield:Notify({Title = "⚠️", Content = "Pilih stat dulu & isi angkanya!", Duration = 5})
+        end
+    end,
+})
+
+Tab:CreateButton({
+    Name = "🗑️ Reset Nametag (Hapus Fake Name)",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player.Character then
+            local head = player.Character:FindFirstChild("Head")
+            if head then
+                local tag = head:FindFirstChild("FakeNameTagPRO")
+                if tag then tag:Destroy() end
+            end
+        end
+        Rayfield:Notify({Title = "Reset", Content = "Fake nametag sudah dihapus", Duration = 4})
+    end,
+})
+
+-- ==================== AUTO START ====================
+setupRespawnHandler()
+
+Rayfield:Notify({
+    Title = "✅ Script PRO Loaded!",
+    Content = "Nama full custom + Level auto-detect ✅\nKlik Refresh Stat Level dulu biar work 100%",
+    Duration = 10
+})
